@@ -1,12 +1,26 @@
 import streamlit as st
-from store_quakes import get_all_quakes
+from store_quakes import get_all_quakes, init_database, save_earthquakes
+from fetch_quakes import fetch_earthquakes
+from validate_quakes import process_earthquakes
 
 st.set_page_config(page_title="QuakeWatch", layout="wide")
+
+# Make sure the database exists
+init_database()
 
 st.title("🌍 QuakeWatch")
 st.subheader("Real-time earthquake data pipeline")
 
-# Get data
+# Fetch Latest section
+st.markdown("### Update Data")
+if st.button("🔄 Fetch Latest Earthquakes"):
+    with st.spinner("Fetching from USGS..."):
+        raw_data = fetch_earthquakes()
+        clean_quakes, stats = process_earthquakes(raw_data)
+        saved, skipped = save_earthquakes(clean_quakes)
+    st.success(f"Fetched {stats['total_received']} quakes — saved {saved} new, skipped {skipped} duplicates.")
+
+# Get data (refreshed after fetch)
 quakes = get_all_quakes()
 
 # AI Summary section
@@ -34,7 +48,7 @@ if quakes:
     st.dataframe(data, use_container_width=True)
     st.caption(f"Total in database: {len(quakes)}")
 else:
-    st.warning("No earthquakes recorded yet.")
+    st.warning("No earthquakes recorded yet. Click 'Fetch Latest' to load some.")
 
 # Stats
 col1, col2, col3 = st.columns(3)
