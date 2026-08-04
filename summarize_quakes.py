@@ -7,6 +7,14 @@ from store_quakes import get_all_quakes
 load_dotenv()
 api_key = os.getenv("ANTHROPIC_API_KEY")
 
+# If running on Streamlit Cloud, get the key from Streamlit secrets
+if not api_key:
+    try:
+        import streamlit as st
+        api_key = st.secrets["ANTHROPIC_API_KEY"]
+    except Exception:
+        pass
+
 def summarize_earthquakes():
     """Use Claude to write a plain-English summary of recent earthquakes."""
     
